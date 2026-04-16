@@ -81,6 +81,7 @@
     (:markua-tangle-caption-fmt       "MARKUA_TANGLE_CAPTION_FMT"       nil "[%s]"           t)
     (:markua-noweb-ref-caption-fmt    "MARKUA_NOWEB_REF_CAPTION_FMT"    nil "«%s»≡"          t)
     (:markua-tangle-noweb-caption-fmt "MARKUA_TANGLE_NOWEB_CAPTION_FMT" nil "[%1$s] «%2$s»≡" t)
+    (:markua-version                  "MARKUA_VERSION"                  nil "0.10"           t)
     (:markua-export-type              "MARKUA_EXPORT_TYPE"              nil "book"           t)
     (:markua-block-caption-level      "MARKUA_BLOCK_CAPTION_LEVEL"      nil "below"          t)
     (:markua-block                    "MARKUA_BLOCK"                    nil nil              newline)))
@@ -137,7 +138,23 @@ These are attributes which are used internally by
 `ox-leanpub-markua', but which have to be omitted in the output
 Markua attribute lines.")
 
+(defconst org-leanpub-markua--valid-versions '("0.10" "0.30")
+  "Valid values for the `#+MARKUA_VERSION' export option.")
+
 ;;; Utility functions
+
+(defun org-leanpub-markua--version (info)
+  "Return normalized Markua version from INFO.
+
+The `#+MARKUA_VERSION' option accepts only \"0.10\" and \"0.30\".
+Any other value triggers a warning and falls back to \"0.10\"."
+  (let ((version (format "%s" (or (plist-get info :markua-version) "0.10"))))
+    (if (member version org-leanpub-markua--valid-versions)
+        version
+      (lwarn '(ox-leanpub-markua) :warning
+             "Invalid MARKUA_VERSION '%s'. Using default version 0.10."
+             version)
+      "0.10")))
 
 (defun org-leanpub-markua--attr_leanpub-attrs (elem)
   "Return an alist containing ELEM's parsed #+ATTR_LEANPUB line, or nil if not specified."
@@ -145,6 +162,20 @@ Markua attribute lines.")
     (when (string-prefix-p "{" attr-leanpub-str)
       (lwarn '(ox-leanpub-markua) :warning "Old-style ATTR_LEANPUB format '%s' no longer supported. Please use format ':attr val ...'" attr-leanpub-str))
     (org-babel-parse-header-arguments attr-leanpub-str)))
+
+(defun org-leanpub-markua--normalize-attrs (attrs info)
+  "Normalize Markua attribute names in ATTRS according to INFO.
+
+For Markua 0.30, `caption' attributes are emitted as `title'
+instead."
+  (mapcar (lambda (elem)
+            (cl-destructuring-bind (key . val) elem
+              (cons (if (and (eq key :caption)
+                             (string= (org-leanpub-markua--version info) "0.30"))
+                        :title
+                      key)
+                    val)))
+          attrs))
 
 (defun org-leanpub-markua--attr-str (attrs &optional block-name exclude-attrs)
   "Internal function to generate a Markua attribute string.
@@ -206,7 +237,11 @@ Markua."
          ;; Parse the attributes from #+ATTR_LEANPUB and concatenate with any
          ;; other arguments given, and with the initial list constructed above.
          ;; Earlier elements of the list override later ones.
-         (attrs (delq nil (append (org-leanpub-markua--attr_leanpub-attrs elem) other-attrs init)))
+         (attrs (org-leanpub-markua--normalize-attrs
+                 (delq nil (append (org-leanpub-markua--attr_leanpub-attrs elem)
+                                   other-attrs
+                                   init))
+                 info))
          ;; Compute the attribute line to print
          (output (org-leanpub-markua--attr-str attrs block-name exclude-attrs)))
     (when (> (length output) 0)
@@ -258,6 +293,7 @@ a communication channel.  This is the same function as
 `org-md-headline' but without inserting the <a> anchors."
   (unless (org-element-property :footnote-section-p headline)
     (let* ((level (org-export-get-relative-level headline info))
+           (markua-version (org-leanpub-markua--version info))
            (title (org-export-data (org-element-property :title headline) info))
            (todo (and (plist-get info :with-todo-keywords)
                       (let ((todo (org-element-property :todo-keyword
@@ -273,7 +309,9 @@ a communication channel.  This is the same function as
                  (let ((char (org-element-property :priority headline)))
                    (and char (format "[#%c] " char)))))
            ;; Headline text without tags.
-           (heading (concat todo priority title (when is-part " #")))
+           (heading (concat todo priority title
+                            (when (and is-part (string= markua-version "0.10"))
+                              " #")))
            (style (plist-get info :md-headline-style)))
       (cond
        ;; Cannot create a headline.  Fall-back to a list.
@@ -284,13 +322,15 @@ a communication channel.  This is the same function as
         (let ((bullet
                (if (not (org-export-numbered-headline-p headline info)) "-"
                  (concat (number-to-string
-                          (car (last (org-export-get-headline-number
+                         (car (last (org-export-get-headline-number
                                       headline info))))
                          "."))))
           (concat bullet " " heading tags "\n\n"
                   (and contents (replace-regexp-in-string "^" (make-string (1+ (length bullet)) ?\s) contents)))))
        (t
-        (concat (org-md--headline-title style level heading nil tags)
+        (concat (when (and is-part (string= markua-version "0.30"))
+                  "{class: part}\n")
+                (org-md--headline-title style level heading nil tags)
                 contents))))))
 
 (defun org-leanpub-markua-headline (headline contents info)
@@ -347,6 +387,9 @@ a communication channel."
 CONTENTS is the transcoded contents string.  INFO is a plist
 holding export options.  Required in order to add footnote
 definitions at the end."
+  ;; Validate and normalize `#+MARKUA_VERSION' during export, even though it
+  ;; does not affect emitted output yet.
+  (org-leanpub-markua--version info)
   (replace-regexp-in-string
    ;; Remove blank lines after index entries
    "\\({i:.+?}\\)\n\n" "\\1\n"
