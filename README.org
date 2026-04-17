@@ -200,7 +200,7 @@ The top level symlink is omitted because it is assumed that you'll be exporting 
 
 ** Special heading tags
 
-If a heading has the =frontmatter=, =mainmatter= or =backmatter= tags, the [[https://leanpub.com/markua/read#directives][corresponding directive]] (they work in both Markdown and Markup modes) is inserted in the output, before the headline. This way, you only need to tag the first chapter of the front, main, and backmatter, respectively.
+In book export, headings tagged =frontmatter=, =mainmatter= or =backmatter= are used to generate the corresponding [[https://leanpub.com/markua/read#directives][Markua directives]] in the manuscript structure. For Markua 0.30, only =mainmatter= and =backmatter= are emitted; =frontmatter= is kept only for Markua 0.10 compatibility. These tags are not interpreted during plain Markua export.
 
 If a level-1 heading has the =part= tag, it is exported as a part heading. In Markua 0.10 this is rendered as ="# Title #"=. In Markua 0.30 it is rendered as:
 

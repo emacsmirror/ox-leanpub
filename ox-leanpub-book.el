@@ -152,6 +152,7 @@ DO-SAMPLE-FILE, ONLY-SUBSET and SUBTREEP are as passed to
          (ignore-stored-filenames (plist-get info :leanpub-book-recompute-filenames))
          (subset-mode (or (and subtreep 'current) (intern (plist-get info :leanpub-book-write-subset))))
          (do-subset (and subset-mode (not (eq subset-mode 'none))))
+         (markua-version (format "%s" (or (plist-get info :markua-version) "0.10")))
          (use-id-for-fname (plist-get info :leanpub-book-id-as-filename))
          ;; Get all the information about the current subtree and heading
          (id-fname (when use-id-for-fname
@@ -177,7 +178,10 @@ DO-SAMPLE-FILE, ONLY-SUBSET and SUBTREEP are as passed to
                         (and (equal subset-mode 'current) point-in-subtree))))
     ;; add appropriate tag for front/main/backmatter for tagged headlines
     (dolist (tag org-leanpub-book-matter-tags)
-      (when (member tag tags)
+      (when (and (member tag tags)
+                 (or (not (string= tag "frontmatter"))
+                     (not (string= export-extension ".markua"))
+                     (string= markua-version "0.10")))
         (let* ((fname (concat tag ".txt")))
           (append-to-file (concat "{" tag "}\n") nil (org-leanpub-book--outfile outdir fname))
           (org-leanpub-book--add-to-bookfiles outdir fname t do-sample-file do-subset only-subset is-subset tags))))

@@ -339,12 +339,15 @@ This function also processes the `sample' and `nobook' tags and
 produces the appropriate Leanpub attributes.  CONTENTS is the
 item contents.  INFO is a plist used as a communication channel."
   (let* ((tags (org-export-get-tags headline info))
-         (other-attrs (cl-remove-if 'null
-                                    (mapcar (lambda (elem)
-                                              (if (string= elem "sample")
-                                                  '(:sample . "true")
-                                                (when (string= elem "nobook")
-                                                  '(:book . "false")))) tags))))
+         (other-attrs (cl-remove-if
+                       'null
+                       (mapcar (lambda (elem)
+                                 (cond
+                                  ((string= elem "sample")
+                                   '(:sample . "true"))
+                                  ((string= elem "nobook")
+                                   '(:book . "false"))))
+                               tags))))
     (concat (org-leanpub-markua--attr-line headline info other-attrs)
             (string-trim-left (org-leanpub-markua-headline-without-anchor headline contents info)))))
 
