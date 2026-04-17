@@ -178,6 +178,24 @@ instead."
                     val)))
           attrs))
 
+(defun org-leanpub-markua--doc-settings (info)
+  "Return parsed `#+MARKUA_DOC_SETTINGS' entries from INFO.
+
+Multiple lines are supported. Later values override earlier ones
+for the same key."
+  (let ((settings-str (plist-get info :markua-doc-settings)))
+    (when settings-str
+      (cl-remove-duplicates
+       (apply #'append
+              (mapcar #'org-babel-parse-header-arguments
+                      (split-string settings-str "\n" t "[ \t]*")))
+       :key #'car
+       :from-end t))))
+
+(defun org-leanpub-markua--doc-setting (info key)
+  "Return Markua document setting KEY from INFO, or nil."
+  (alist-get key (org-leanpub-markua--doc-settings info)))
+
 (defun org-leanpub-markua--attr-str (attrs &optional block-name exclude-attrs)
   "Internal function to generate a Markua attribute string.
 
@@ -469,10 +487,17 @@ https://leanpub.com/markua/read#text-formatting"
   "Transcode a PARAGRAPH element from Org to Markua.
 CONTENTS is the contents of the paragraph, as a string.  INFO is
 the plist used as a communication channel."
-  (concat (org-leanpub-markua--attr-line paragraph info)
-          (replace-regexp-in-string "{{markua:linebreak}}" "\n"
-                                    (replace-regexp-in-string "\n" " " contents)
-                                    nil 'literal)))
+  (let* ((soft-breaks (org-leanpub-markua--doc-setting info :soft-breaks))
+         (preserve-soft-breaks
+          (and (string= (org-leanpub-markua--version info) "0.30")
+               (string= soft-breaks "break"))))
+    (concat (org-leanpub-markua--attr-line paragraph info)
+            (replace-regexp-in-string
+             "{{markua:linebreak}}" "\n"
+             (if preserve-soft-breaks
+                 contents
+               (replace-regexp-in-string "\n" " " contents))
+             nil 'literal))))
 
 ;;; Quote blocks
 

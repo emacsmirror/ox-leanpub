@@ -367,6 +367,8 @@ For Markua 0.30 book export, you can specify [[https://markua.com/#document-sett
 
 Only the settings you specify are emitted, so all others keep their Markua defaults. During Markua 0.30 book export, these settings are written to =manuscript/doc_settings.txt= and included automatically at the start of =Book.txt= and =Subset.txt= when present. They are not emitted for Markua 0.10.
 
+The =soft-breaks= setting also affects paragraph rendering. By default, =ox-leanpub-markua= collapses paragraph newlines to spaces. If you specify =:soft-breaks break=, paragraph newlines are preserved as written.
+
 The generated file uses one setting per line, for example:
 
 #+begin_src text
