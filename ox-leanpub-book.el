@@ -115,6 +115,46 @@ Concatenates `OUTDIR' with `F' using the correct separator, to
 return a relative pathname."
   (concat (file-name-as-directory outdir) f))
 
+(defun org-leanpub-book--parse-markua-doc-settings (info)
+  "Return parsed `#+MARKUA_DOC_SETTINGS' entries from INFO.
+
+Multiple lines are supported. Later values override earlier
+ones for the same key."
+  (let ((settings-str (plist-get info :markua-doc-settings)))
+    (when settings-str
+      (cl-remove-duplicates
+       (apply #'append
+              (mapcar #'org-babel-parse-header-arguments
+                      (split-string settings-str "\n" t "[ \t]*")))
+       :key #'car
+       :from-end t))))
+
+(defun org-leanpub-book--format-markua-doc-settings (settings)
+  "Format SETTINGS as a Markua document settings hash."
+  (when settings
+    (concat
+     "{\n"
+     (mapconcat (lambda (elem)
+                  (format "    %s: %s"
+                          (substring (symbol-name (car elem)) 1)
+                          (cdr elem)))
+                settings
+                "\n")
+     "\n}\n")))
+
+(defun org-leanpub-book--write-markua-doc-settings (info outdir)
+  "Write Markua document settings from INFO into OUTDIR.
+
+Returns the filename to include in `Book.txt' and `Subset.txt',
+or nil when no settings were specified."
+  (let* ((settings (org-leanpub-book--parse-markua-doc-settings info))
+         (filename "doc_settings.txt")
+         (outfile (org-leanpub-book--outfile outdir filename))
+         (contents (org-leanpub-book--format-markua-doc-settings settings)))
+    (when settings
+      (write-region contents nil outfile nil 'silent)
+      filename)))
+
 (defun org-leanpub-book--add-to-bookfiles (outdir line &optional always do-sample-file
                                                   do-subset only-subset is-subset tags)
   "Add a `LINE' to the correct book files, terminated with an EOL.
@@ -241,7 +281,11 @@ normally not be called directly by the user."
                 (org-export--get-buffer-attributes)
                 (org-export-get-environment export-backend-symbol subtreep)))
          (outdir (org-leanpub-book--outdir info))
-         (original-point (point)))
+         (subset-mode (or (and subtreep 'current) (intern (plist-get info :leanpub-book-write-subset))))
+         (do-subset (and subset-mode (not (eq subset-mode 'none))))
+         (markua-version (format "%s" (or (plist-get info :markua-version) "0.10")))
+         (original-point (point))
+         (doc-settings-file nil))
 
     ;; Create necessary directories and symlinks, if needed
     (let* (
@@ -289,6 +333,14 @@ error).")
                            (append (if only-subset '("Subset") '("Book" "Sample" "Subset"))
                                    org-leanpub-book-matter-tags)))
       (delete-file (org-leanpub-book--outfile outdir fname)))
+    (when (file-exists-p (org-leanpub-book--outfile outdir "doc_settings.txt"))
+      (delete-file (org-leanpub-book--outfile outdir "doc_settings.txt")))
+
+    (when (and (string= export-extension ".markua")
+               (string= markua-version "0.30"))
+      (setq doc-settings-file (org-leanpub-book--write-markua-doc-settings info outdir))
+      (when doc-settings-file
+        (org-leanpub-book--add-to-bookfiles outdir doc-settings-file t nil do-subset only-subset nil nil)))
 
     ;; Loop through all the top-level headings in the document, exporting them
     ;; as needed, except for those tagged with "noexport"

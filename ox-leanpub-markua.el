@@ -81,6 +81,7 @@
     (:markua-tangle-caption-fmt       "MARKUA_TANGLE_CAPTION_FMT"       nil "[%s]"           t)
     (:markua-noweb-ref-caption-fmt    "MARKUA_NOWEB_REF_CAPTION_FMT"    nil "«%s»≡"          t)
     (:markua-tangle-noweb-caption-fmt "MARKUA_TANGLE_NOWEB_CAPTION_FMT" nil "[%1$s] «%2$s»≡" t)
+    (:markua-doc-settings             "MARKUA_DOC_SETTINGS"             nil nil              newline)
     (:markua-version                  "MARKUA_VERSION"                  nil "0.10"           t)
     (:markua-export-type              "MARKUA_EXPORT_TYPE"              nil "book"           t)
     (:markua-block-caption-level      "MARKUA_BLOCK_CAPTION_LEVEL"      nil "below"          t)
