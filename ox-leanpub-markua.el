@@ -752,15 +752,19 @@ communication channel."
            (let ((id (org-element-property :path link)))
              (format "[%s](#%s)" contents id)))
           ((org-export-inline-image-p link org-html-inline-image-rules)
-           (let ((path (let ((raw-path (org-element-property :path link)))
-                         (if (not (file-name-absolute-p raw-path)) raw-path
-                           (expand-file-name raw-path)))))
+           (let* ((path (let ((raw-path (org-element-property :path link)))
+                          (if (not (file-name-absolute-p raw-path)) raw-path
+                            (expand-file-name raw-path))))
+                  (alt-text
+                   (if (string= (org-leanpub-markua--version info) "0.10")
+                       (let ((caption (org-export-get-caption
+                                       (org-export-get-parent-element link))))
+                         (if caption
+                             (org-export-data caption info)
+                           ""))
+                     (or contents ""))))
              (format "![%s](%s)"
-                     (let ((caption (org-export-get-caption
-                                     (org-export-get-parent-element link))))
-                       (if caption
-                           (org-export-data caption info)
-                         ""))
+                     alt-text
                      path)))
           (t (let* ((raw-path (org-element-property :path link))
                     (path (if (member type '("http" "https" "ftp"))
