@@ -374,16 +374,23 @@ a communication channel."
                  (concat (and tag ": ")
                          (org-trim (replace-regexp-in-string "^" (make-string (1+ (length bullet)) ?\s) contents)))))))
 
-(defun org-leanpub-markua-keyword (keyword _contents _info)
+(defun org-leanpub-markua-keyword (keyword _contents info)
   "Transcode a KEYWORD element from Org to Markua."
   (let ((key (org-element-property :key keyword))
         (value (org-element-property :value keyword)))
     (cond
      ((string= key "MARKUA") value)
-     ((string= key "INDEX") (format "{i:\"%s\"}"
-                                    (replace-regexp-in-string
-                                     "\\(see\\|seealso\\)=\"?\\(.+?\\)\"?$" "\\1{i:'\\2'}"
-                                     value)))
+     ((string= key "INDEX")
+      (if (string= (org-leanpub-markua--version info) "0.30")
+          (format "{i:\"%s\"}"
+                  (replace-regexp-in-string
+                   "\\(see\\|seealso\\)=\"?\\(.+?\\)\"?$" "\\1{i:'\\2'}"
+                   value))
+        (progn
+          (lwarn '(ox-leanpub-markua) :warning
+                 "Ignoring #+INDEX entry for MARKUA_VERSION %s: index entries are only supported in Markua 0.30."
+                 (org-leanpub-markua--version info))
+          "")))
      (t ""))))
 
 (defun org-leanpub-markua-inner-template (contents info)
