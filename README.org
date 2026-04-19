@@ -379,6 +379,8 @@ The generated file uses one setting per line, for example:
 }
 #+end_src
 
+For Markua 0.30, raw HTML export blocks and snippets are ignored, since raw HTML is not supported in that version of the syntax.
+
 ** Index entries
 
 Leanpub supports producing indices [[https://community.leanpub.com/t/first-version-of-index-entry-support-is-live-only-for-markua-0-30-books/3859][for books using Markua 0.30]], so =ox-leanpub-markua= exports [[https://orgmode.org/manual/Generating-an-index.html][Org-mode index entries]] using the ={i:...}= syntax used by Markua when =#+MARKUA_VERSION= is set to =0.30=. For Markua 0.10, =#+INDEX= entries are ignored. The value given to =#+INDEX= is passed as-is into the ={i:...}= attributes (including any formatting markup, which needs to be provided in Markua format), with one exception: for =see= and =seealso= entries, the format should be =see=otherentry= or =seealso=otherentry=, and it will be converted to the correct syntax on export. The value given to =#+INDEX= must not be enclosed in quotes, but the value passed to =see= or =seealso= may be enclosed in quotes. Separators such as ~!~ and ~|~ must be escaped with a backslash.

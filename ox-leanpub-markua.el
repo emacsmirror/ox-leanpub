@@ -585,20 +585,36 @@ a communication channel."
 
 ;;;; Export Snippet
 
-(defun org-leanpub-markua-export-snippet (export-snippet _contents _info)
+(defun org-leanpub-markua-export-snippet (export-snippet _contents info)
   "Transcode a EXPORT-SNIPPET object from Org to Markua.
 CONTENTS is nil.  INFO is a plist holding contextual
 information."
-  (when (eq (org-export-snippet-backend export-snippet) 'leanpub-markua)
-    (org-element-property :value export-snippet)))
+  (let ((backend (org-export-snippet-backend export-snippet)))
+    (cond
+     ((eq backend 'leanpub-markua)
+      (org-element-property :value export-snippet))
+     ((and (eq backend 'html)
+           (string= (org-leanpub-markua--version info) "0.30"))
+      (lwarn '(ox-leanpub-markua) :warning
+             "Ignoring raw HTML export snippet for MARKUA_VERSION 0.30.")
+      "")
+     (t nil))))
 
 ;;;; Export Block
 
-(defun org-leanpub-markua-export-block (export-block _contents _info)
+(defun org-leanpub-markua-export-block (export-block _contents info)
   "Transcode a EXPORT-BLOCK element from Org to Markua.
 CONTENTS is nil.  INFO is a plist holding contextual information."
-  (when (string= (org-element-property :type export-block) "MARKUA")
-    (org-remove-indentation (org-element-property :value export-block))))
+  (let ((type (org-element-property :type export-block)))
+    (cond
+     ((string= type "MARKUA")
+      (org-remove-indentation (org-element-property :value export-block)))
+     ((and (string= type "HTML")
+           (string= (org-leanpub-markua--version info) "0.30"))
+      (lwarn '(ox-leanpub-markua) :warning
+             "Ignoring raw HTML export block for MARKUA_VERSION 0.30.")
+      "")
+     (t nil))))
 
 ;;; > ~~~~~~~~
 ;;; > 123.0
