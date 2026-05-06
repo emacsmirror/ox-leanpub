@@ -689,7 +689,7 @@ This is an internal function, should not be called directly."
         (let ((block-value (buffer-substring (org-element-property :contents-begin block)
                                              (org-element-property :contents-end block))))
           (concat
-           (org-leanpub-markua--attr-line block info nil nil '(:caption :title) type)
+           (org-leanpub-markua--attr-line block info nil nil '(:caption :title :caption-level) type)
            (org-leanpub-markua--block-headline caption caption-level block)
            (org-leanpub-markua--chomp-end block-value)
            (format "\n{/%s}\n" type)))
@@ -698,7 +698,7 @@ This is an internal function, should not be called directly."
       (cl-destructuring-bind (markua-block &optional markua-attributes)
           (alist-get type block-defs (alist-get "blurb" block-defs nil nil #'equal) nil #'equal)
         (concat
-         (org-leanpub-markua--attr-line block info markua-attributes nil '(:caption :title) markua-block)
+         (org-leanpub-markua--attr-line block info markua-attributes nil '(:caption :title :caption-level) markua-block)
          (org-leanpub-markua--block-headline caption caption-level block)
          (org-leanpub-markua--chomp-end (org-remove-indentation contents))
          (format "\n{/%s}\n" markua-block))))))
