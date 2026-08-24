@@ -269,7 +269,7 @@ And in LFM as:
 | =#+begin/end_tip=         | ={blurb, class: "tip"}=         |
 | =#+begin/end_warning=     | ={blurb, class: "warning"}=     |
 
-You can specify a [[https://leanpub.com/markua/read#leanpub-auto-using-extension-attributes-on-blurbs-to-add-icon-support][custom icon]] for a block using the =:icon= attribute in an =#+ATTR_LEANPUB= line. For example:
+You can specify a [[https://leanpub.com/read/markua/leanpub-auto-block-elements#leanpub-auto-using-extension-attributes-on-blurbs-to-add-icon-support][custom icon]] for a block using the =:icon= attribute in an =#+ATTR_LEANPUB= line. For example:
 
 #+begin_src org
 ,#+ATTR_LEANPUB: :icon github
@@ -287,7 +287,7 @@ You can change the default icon for a block for the whole document, or you can e
 Where =blockname= and at least one of =:class= or =:icon= needs to be specified:
 - =blockname= is the name of the block to define. Can be one of the existing block names (to redefine it) or a new one.
 - =classname= (optional) is the name of an existing supported Markua block class (as listed in the table above). It can be omitted to use a plain ={blurb}= block.
-- =iconname= (optional) is a [[https://leanpub.com/markua/read#leanpub-auto-using-extension-attributes-on-blurbs-to-add-icon-support][valid icon name]] to use for the block.
+- =iconname= (optional) is a [[https://leanpub.com/read/markua/leanpub-auto-block-elements#leanpub-auto-using-extension-attributes-on-blurbs-to-add-icon-support][valid icon name]] to use for the block.
 
 You can define multiple block types, each on their own =#+MARKUA_BLOCK= line. For example, you can change the default icon of =tip= blocks to be a lightbulb instead of the default key icon:
 
