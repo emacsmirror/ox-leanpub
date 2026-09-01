@@ -1,11 +1,11 @@
 ;;; ox-leanpub.el --- Export Org documents to Leanpub book format  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2020 Diego Zamboni
+;; Copyright (C) 2019-2026 Diego Zamboni
 
 ;; Author: Diego Zamboni <diego@zzamboni.org>
 ;; Keywords: files, org, leanpub
 ;; URL: https://gitlab.com/zzamboni/ox-leanpub
-;; Package-Version: 0.2
+;; Package-Version: 0.4
 ;; Package-Requires: ((org "9.1") (ox-gfm "1.0") (emacs "26.1") (s "1.12.0"))
 
 ;; Licensed under the Apache License, Version 2.0 (the "License");

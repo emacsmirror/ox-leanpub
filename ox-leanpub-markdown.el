@@ -1,11 +1,11 @@
 ;;; ox-leanpub-markdown.el --- Leanpub Markdown Back-End for Org Export Engine  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019-2020 Diego Zamboni, Juan Reyero
+;; Copyright (C) 2019-2026 Diego Zamboni, Juan Reyero
 
 ;; Author: Diego Zamboni <diego@zzamboni.org>
 ;;         Juan Reyero <juan _at! juanreyero.com>
 ;; URL: https://gitlab.com/zzamboni/ox-leanpub
-;; Package-Version: 0.2
+;; Package-Version: 0.4
 ;; Keywords: files, org, wp, markdown, leanpub
 ;; Package-Requires: ((org "9.1") (emacs "26.1"))
 

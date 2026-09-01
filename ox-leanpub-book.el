@@ -1,10 +1,10 @@
 ;;; ox-leanpub-book.el --- Export an Org file to LeanPub multifile setup  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019-2020 Diego Zamboni
+;; Copyright (C) 2019-2026 Diego Zamboni
 
 ;; Author: Diego Zamboni <diego@zzamboni.org>
 ;; URL: https://gitlab.com/zzamboni/ox-leanpub
-;; Package-Version: 0.3
+;; Package-Version: 0.4
 ;; Keywords: files, org, wp, markdown, leanpub
 ;; Package-Requires: ((org "9.1") (emacs "26.1"))
 
@@ -36,6 +36,7 @@
 (require 'cl-lib)
 (require 'ob-core)
 (require 'ox)
+(require 'ox-leanpub-common)
 
 ;; Declare functions defined in libraries that get loaded on demand, to avoid
 ;; lint warnings
@@ -115,20 +116,6 @@ Concatenates `OUTDIR' with `F' using the correct separator, to
 return a relative pathname."
   (concat (file-name-as-directory outdir) f))
 
-(defun org-leanpub-book--parse-markua-doc-settings (info)
-  "Return parsed `#+MARKUA_DOC_SETTINGS' entries from INFO.
-
-Multiple lines are supported. Later values override earlier
-ones for the same key."
-  (let ((settings-str (plist-get info :markua-doc-settings)))
-    (when settings-str
-      (cl-remove-duplicates
-       (apply #'append
-              (mapcar #'org-babel-parse-header-arguments
-                      (split-string settings-str "\n" t "[ \t]*")))
-       :key #'car
-       :from-end t))))
-
 (defun org-leanpub-book--format-markua-doc-settings (settings)
   "Format SETTINGS as a Markua document settings hash."
   (when settings
@@ -147,7 +134,7 @@ ones for the same key."
 
 Returns the filename to include in `Book.txt' and `Subset.txt',
 or nil when no settings were specified."
-  (let* ((settings (org-leanpub-book--parse-markua-doc-settings info))
+  (let* ((settings (org-leanpub--markua-doc-settings info))
          (filename "doc_settings.txt")
          (outfile (org-leanpub-book--outfile outdir filename))
          (contents (org-leanpub-book--format-markua-doc-settings settings)))

@@ -1,6 +1,6 @@
 ;;; ox-leanpub-markua.el --- Markua Back-End for Org Export Engine  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019-2020 Diego Zamboni
+;; Copyright (C) 2019-2026 Diego Zamboni
 
 ;; Author: Diego Zamboni <diego@zzamboni.org>
 ;; URL: https://gitlab.com/zzamboni/ox-leanpub
@@ -35,6 +35,7 @@
 (require 'ox-md)
 (require 'ob-core)
 (require 'subr-x)
+(require 'ox-leanpub-common)
 (require 'ox-gfm)
 (require 's)
 
@@ -139,9 +140,6 @@ These are attributes which are used internally by
 `ox-leanpub-markua', but which have to be omitted in the output
 Markua attribute lines.")
 
-(defconst org-leanpub-markua--valid-versions '("0.10" "0.30")
-  "Valid values for the `#+MARKUA_VERSION' export option.")
-
 ;;; Utility functions
 
 (defun org-leanpub-markua--version (info)
@@ -149,13 +147,7 @@ Markua attribute lines.")
 
 The `#+MARKUA_VERSION' option accepts only \"0.10\" and \"0.30\".
 Any other value triggers a warning and falls back to \"0.10\"."
-  (let ((version (format "%s" (or (plist-get info :markua-version) "0.10"))))
-    (if (member version org-leanpub-markua--valid-versions)
-        version
-      (lwarn '(ox-leanpub-markua) :warning
-             "Invalid MARKUA_VERSION '%s'. Using default version 0.10."
-             version)
-      "0.10")))
+  (org-leanpub--markua-version info))
 
 (defun org-leanpub-markua--attr_leanpub-attrs (elem)
   "Return an alist containing ELEM's parsed #+ATTR_LEANPUB line, or nil if not specified."
@@ -183,18 +175,11 @@ instead."
 
 Multiple lines are supported. Later values override earlier ones
 for the same key."
-  (let ((settings-str (plist-get info :markua-doc-settings)))
-    (when settings-str
-      (cl-remove-duplicates
-       (apply #'append
-              (mapcar #'org-babel-parse-header-arguments
-                      (split-string settings-str "\n" t "[ \t]*")))
-       :key #'car
-       :from-end t))))
+  (org-leanpub--markua-doc-settings info))
 
 (defun org-leanpub-markua--doc-setting (info key)
   "Return Markua document setting KEY from INFO, or nil."
-  (alist-get key (org-leanpub-markua--doc-settings info)))
+  (org-leanpub--markua-doc-setting info key))
 
 (defun org-leanpub-markua--attr-str (attrs &optional block-name exclude-attrs)
   "Internal function to generate a Markua attribute string.
