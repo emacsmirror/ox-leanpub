@@ -4,7 +4,7 @@
 
 ;; Author: Diego Zamboni <diego@zzamboni.org>
 ;; URL: https://gitlab.com/zzamboni/ox-leanpub
-;; Package-Version: 0.2
+;; Package-Version: 0.3
 ;; Keywords: files, org, wp, markdown, leanpub
 ;; Package-Requires: ((org "9.1") (emacs "26.1"))
 
@@ -175,8 +175,9 @@ chapter, which is used to check for the `sample' tag."
       (append-to-file line-n nil (org-leanpub-book--outfile outdir "Subset.txt")))))
 
 (defun org-leanpub-book--process-chapter (info outdir original-point
-                                               export-function export-extension
-                                               do-sample-file only-subset subtreep)
+                                               export-backend-symbol export-extension
+                                               visible-only do-sample-file
+                                               only-subset subtreep)
   "Main Book chapter export function.
 Processes an org element, and exports it if it's a top level
 heading.  This function gets called for all the elements in the
@@ -185,8 +186,8 @@ org document, but it only processes top level headings.
 INFO is used for context and document information. OUTDIR is the
 directory where the output should be stored. ORIGINAL-POINT is
 the cursor position before the export started (used for the
-\"current chapter\" export). EXPORT-FUNCTION, EXPORT-EXTENSION,
-DO-SAMPLE-FILE, ONLY-SUBSET and SUBTREEP are as passed to
+\"current chapter\" export). EXPORT-BACKEND-SYMBOL, EXPORT-EXTENSION,
+VISIBLE-ONLY, DO-SAMPLE-FILE, ONLY-SUBSET and SUBTREEP are as passed to
 `org-leanpub-book--export'"
   (let* ((current-subtree (org-element-at-point))
          (ignore-stored-filenames (plist-get info :leanpub-book-recompute-filenames))
@@ -226,34 +227,25 @@ DO-SAMPLE-FILE, ONLY-SUBSET and SUBTREEP are as passed to
           (append-to-file (concat "{" tag "}\n") nil (org-leanpub-book--outfile outdir fname))
           (org-leanpub-book--add-to-bookfiles outdir fname t do-sample-file do-subset only-subset is-subset tags))))
     (when (or (not only-subset) is-subset)
-      ;; set filename only if the property is missing or different from the correct filename
-      (when (or (not stored-filename)
-                (and ignore-stored-filenames (not (string= stored-filename computed-filename))))
-        (org-entry-put (point) "EXPORT_FILE_NAME" computed-filename))
       ;; add to the filename to the book files
       (org-leanpub-book--add-to-bookfiles outdir (file-name-nondirectory final-filename)
                                           nil do-sample-file do-subset only-subset is-subset tags)
       ;; select the subtree so that its headline is also exported (otherwise we get just the body)
       (org-mark-subtree)
       (message "Exporting %s (%s)" final-filename title)
-      (funcall export-function outdir nil t))))
+      (org-export-to-file export-backend-symbol final-filename nil t visible-only))))
 ;; Main export function
-(defun org-leanpub-book--export (export-function export-extension export-backend-symbol
+(defun org-leanpub-book--export (export-backend-symbol export-extension book-backend-symbol
                                                  &optional subtreep visible-only do-sample-file only-subset)
   "Exports buffer to a Leanpub book.
 
 The buffer is split by top level headlines, populating the
 corresponding book-specification files.
 
-EXPORT-FUNCTION is a regular Org exporter function, which must
-receives four optional arguments OUTDIR (value of
-LEANPUB_BOOK_OUTPUT_DIR), ASYNC (which is always passed as nil),
-SUBTREEP and VISIBLE-ONLY (which are passed unchanged from the
-corresponding arguments received). In particular, the SUBTREEP
-option must be obeyed for the current-chapter export to work.
+EXPORT-BACKEND-SYMBOL is the exporter used for chapter files.
 Files will be created with the extension EXPORT-EXTENSION.
-EXPORT-BACKEND-SYMBOL is the name (symbol) of the exporter to
-use.
+BOOK-BACKEND-SYMBOL is the backend symbol used to read the
+export options for book export.
 
 DO-SAMPLE-FILE specifies whether the `Sample.txt' file should be
 generated (in Leanpub this is only needed for Markdown books, for
@@ -277,9 +269,9 @@ normally not be called directly by the user."
   (interactive)
   (let* ((info (org-combine-plists
                 (org-export--get-export-attributes
-                 export-backend-symbol subtreep visible-only)
+                 book-backend-symbol subtreep visible-only)
                 (org-export--get-buffer-attributes)
-                (org-export-get-environment export-backend-symbol subtreep)))
+                (org-export-get-environment book-backend-symbol subtreep)))
          (outdir (org-leanpub-book--outdir info))
          (subset-mode (or (and subtreep 'current) (intern (plist-get info :leanpub-book-write-subset))))
          (do-subset (and subset-mode (not (eq subset-mode 'none))))
@@ -349,8 +341,9 @@ error).")
        (lambda ()
          (when (and (org-at-heading-p) (= (nth 1 (org-heading-components)) 1))
            (org-leanpub-book--process-chapter info outdir original-point
-                                              export-function export-extension
-                                              do-sample-file only-subset subtreep)))
+                                              export-backend-symbol export-extension
+                                              visible-only do-sample-file
+                                              only-subset subtreep)))
        "-noexport"))
 
     (message "LeanPub export to %s/ finished" outdir)))
@@ -361,7 +354,7 @@ error).")
 Frontend to `org-leanpub-book--export' with the appropriate
 parameters SUBTREEP, VISIBLE-ONLY, DO-SAMPLE-FILE and
 ONLY-SUBSET."
-  (org-leanpub-book--export #'org-leanpub-markdown-export-to-markdown ".md" 'leanpub-book-markdown
+  (org-leanpub-book--export 'leanpub-markdown ".md" 'leanpub-book-markdown
                             subtreep visible-only do-sample-file only-subset))
 
 (defun org-leanpub-book-export-markua (&optional subtreep visible-only do-sample-file only-subset)
@@ -369,7 +362,7 @@ ONLY-SUBSET."
 Frontend to `org-leanpub-book--export' with the appropriate
 parameters SUBTREEP, VISIBLE-ONLY, DO-SAMPLE-FILE and
 ONLY-SUBSET."
-  (org-leanpub-book--export #'org-leanpub-markua-export-to-markua ".markua" 'leanpub-book-markua
+  (org-leanpub-book--export 'leanpub-markua ".markua" 'leanpub-book-markua
                             subtreep visible-only do-sample-file only-subset))
 
 (provide 'ox-leanpub-book)
