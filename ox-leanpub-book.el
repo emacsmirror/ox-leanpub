@@ -98,9 +98,9 @@ correct value in your org file.")
 ;;; Utility functions
 
 (defun org-leanpub-book--outdir (info)
-  "Return the directory to write to. Guarantees that 'manuscript'
-is present in case the user defined outpath didn't have
-'manuscript' as its final folder name."
+  "Return the directory to write to based on settings from INFO.
+Guarantees that `manuscript' is present in case the user defined
+outpath didn't have `manuscript' as its final folder name."
 
   (let ((plist-outdir (plist-get info :leanpub-book-output-dir)))
     (if (string-equal plist-outdir org-leanpub-book-manuscript-dir)

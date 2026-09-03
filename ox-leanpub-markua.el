@@ -150,7 +150,8 @@ Any other value triggers a warning and falls back to \"0.10\"."
   (org-leanpub--markua-version info))
 
 (defun org-leanpub-markua--attr_leanpub-attrs (elem)
-  "Return an alist containing ELEM's parsed #+ATTR_LEANPUB line, or nil if not specified."
+  "Return an alist containing ELEM's parsed #+ATTR_LEANPUB line.
+Returns nil if not specified."
   (let ((attr-leanpub-str (car (org-element-property :attr_leanpub elem))))
     (when (string-prefix-p "{" attr-leanpub-str)
       (lwarn '(ox-leanpub-markua) :warning "Old-style ATTR_LEANPUB format '%s' no longer supported. Please use format ':attr val ...'" attr-leanpub-str))
@@ -462,7 +463,7 @@ contextual information."
   "Transcode an UNDERLINE object from Org to MARKUA.
 CONTENTS is the contents of the object. INFO is a plist holding
 contextual information. Please note that the actual output
-depends on Markua's 'Italicize Underlines' setting, see
+depends on the Markua `Italicize Underlines' setting, see
 https://leanpub.com/markua/read#text-formatting"
   (format "_%s_" contents))
 
